@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import useSWR from "swr"
 import { z } from "zod"
@@ -23,7 +23,7 @@ const searchSchema = z.object({
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-export default function SearchPageClient() {
+export function SearchPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState<"games" | "courts">("games")
@@ -81,28 +81,39 @@ export default function SearchPageClient() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-8">Search Results</h1>
         <div className="lg:grid lg:grid-cols-4 lg:gap-8">
-          <div className="lg:col-span-1">
-            <div className="sticky top-8">
-              <SearchFilters filters={filters} onFilterChange={handleFilterChange} />
+          <Suspense fallback={<div>Loading...</div>}>
+            <div className="lg:col-span-1">
+              <div className="sticky top-8">
+
+                <SearchFilters filters={filters} onFilterChange={handleFilterChange} />
+
+              </div>
             </div>
-          </div>
-          <div className="mt-8 lg:mt-0 lg:col-span-3">
-            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "games" | "courts")}>
-              <TabsList className="mb-8">
-                <TabsTrigger value="games">Games</TabsTrigger>
-                <TabsTrigger value="courts">Courts</TabsTrigger>
-              </TabsList>
-              <TabsContent value="games">
-                <GamesList games={gamesData} />
-              </TabsContent>
-              <TabsContent value="courts">
-                <CourtsList courts={courtsData} />
-              </TabsContent>
-            </Tabs>
-          </div>
+            <div className="mt-8 lg:mt-0 lg:col-span-3">
+              <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "games" | "courts")}>
+                <TabsList className="mb-8">
+                  <TabsTrigger value="games">Games</TabsTrigger>
+                  <TabsTrigger value="courts">Courts</TabsTrigger>
+                </TabsList>
+                <TabsContent value="games">
+                  <GamesList games={gamesData} />
+                </TabsContent>
+                <TabsContent value="courts">
+                  <CourtsList courts={courtsData} />
+                </TabsContent>
+              </Tabs>
+            </div>
+          </Suspense>
         </div>
       </div>
     </div>
   )
 }
 
+export default function SearchPageClient() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SearchPageContent />
+    </Suspense>
+  );
+}
